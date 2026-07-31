@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>// Protocol_Delete</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            background: #07070a;
+            color: #e6e6e6;
+            font-family: 'Consolas', 'Courier New', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #hexCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(7, 7, 10, 0.85);
+            border-bottom: 1px solid #b3122a;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            color: #ff1e3c;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: #e6e6e6;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        nav a:hover {
+            color: #ff1e3c;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 7vw, 4rem);
+            color: #ff1e3c;
+            margin-bottom: 1rem;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(255, 30, 60, 0.5);
+        }
+
+        .hero p {
+            color: #7a7a85;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+        }
+
+        section {
+            margin: 4rem 0;
+        }
+
+        h2 {
+            color: #ff1e3c;
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .projects-box {
+            background: #0d0d12;
+            border: 1px solid rgba(255, 30, 60, 0.3);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .projects-box h3 {
+            color: #7a7a85;
+            margin-bottom: 0.5rem;
+        }
+
+        .projects-box p {
+            color: #5a5a65;
+            font-size: 0.9rem;
+        }
+
+        /* ===== SOCIAL BUTTONS WITH ICONS ===== */
+        .socials {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.5rem;
+            background: #0d0d12;
+            border: 1px solid rgba(255, 30, 60, 0.3);
+            color: #e6e6e6;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            transition: 0.3s;
+            min-width: 180px;
+            justify-content: center;
+        }
+
+        .social-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+            flex-shrink: 0;
+        }
+
+        .social-btn:hover {
+            background: #ff1e3c;
+            color: #000;
+            border-color: #ff1e3c;
+            box-shadow: 0 0 20px rgba(255, 30, 60, 0.5);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="hexCanvas"></canvas>
+
+<div class="content">
+    <nav>
+        <div class="logo">&gt; Protocol_Delete</div>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#socials">Socials</a></li>
+        </ul>
+    </nav>
+
+    <header id="home" class="hero">
+        <h1>Protocol_Delete</h1>
+        <p>Developer // Designer // Engineer</p>
+    </header>
+
+    <section id="projects">
+        <h2>// PROJECTS</h2>
+        <div class="projects-box">
+            <h3>No Projects yet</h3>
+            <p>I am going to work on something, when I have enough time for it.</p>
+        </div>
+    </section>
+
+    <section id="socials">
+        <h2>// SOCIALS</h2>
+        <div class="socials">
+
+            <!-- GitHub -->
+            <a href="https://github.com/Protocol-Delete" target="_blank" class="social-btn">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2.17c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.27-1.69-1.27-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.76 2.68 1.25 3.34.96.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 015.79 0c2.21-1.49 3.18-1.18 3.18-1.18.62 1.59.23 2.76.11 3.05.73.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.51 11.51 0 0023.5 12C23.5 5.73 18.27.5 12 .5z"/>
+                </svg>
+                GitHub
+            </a>
+
+            <!-- Discord -->
+            <a href="https://discord.com/users/893175705930719285" target="_blank" class="social-btn">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.32 4.37A19.8 19.8 0 0015.43 3c-.22.4-.47.93-.65 1.35a18.3 18.3 0 00-5.56 0C9.04 3.93 8.78 3.4 8.56 3a19.7 19.7 0 00-4.89 1.37C.53 9.04-.33 13.58.1 18.06A19.9 19.9 0 006.18 21c.48-.66.9-1.38 1.26-2.14-.7-.26-1.36-.59-2-.98.17-.12.33-.25.49-.38a14.2 14.2 0 0012.14 0c.16.13.32.26.49.38-.64.39-1.3.72-2 .98.36.76.78 1.48 1.26 2.14a19.9 19.9 0 006.08-2.94c.52-5.21-.84-9.72-3.58-13.69zM8.02 15.33c-1.18 0-2.15-1.08-2.15-2.41s.95-2.41 2.15-2.41c1.2 0 2.17 1.09 2.15 2.41 0 1.33-.95 2.41-2.15 2.41zm7.96 0c-1.18 0-2.15-1.08-2.15-2.41s.95-2.41 2.15-2.41c1.2 0 2.17 1.09 2.15 2.41 0 1.33-.95 2.41-2.15 2.41z"/>
+                </svg>
+                Discord
+            </a>
+
+            <!-- Email -->
+            <a href="mailto:musy9111@gmail.com" class="social-btn">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                Email
+            </a>
+
+        </div>
+    </section>
+</div>
+
+<script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const CONFIG = {
+        hexSize: 40,
+        hexScale: 0.95,
+        lineWidth: 1,
+        baseAlphaMin: 0.2,
+        baseAlphaMax: 0.3,
+        pulseTriggerEvery: 8,
+        pulseIntensityMin: 0.5,
+        pulseIntensityMax: 0.8,
+        pulseSpeedMin: 0.02,
+        pulseSpeedMax: 0.05,
+        waveTriggerEvery: 240,
+        waveRadiusMin: 150,
+        waveRadiusMax: 250,
+        waveIntensity: 0.7,
+        waveDelay: 400,
+        mouseRadius: 180,
+        mouseStrength: 0.9,
+        mouseTriggerThreshold: 0.6,
+        mouseFadeSpeed: 1.5,
+        glowBlurMax: 20,
+        fillOpacity: 0.15,
+        strokeRGB: '255, 30, 60',
+        fillRGB: '255, 30, 60',
+    };
+
+    // ============================================
+    // ANIMATION
+    // ============================================
+    const canvas = document.getElementById('hexCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let hexagons = [];
+    let mouseX = -1000;
+    let mouseY = -1000;
+
+    function resize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        buildGrid();
+    }
+
+    function buildGrid() {
+        hexagons = [];
+        const hexW = Math.sqrt(3) * CONFIG.hexSize;
+        const hexH = 2 * CONFIG.hexSize;
+        const vertStep = hexH * 0.75;
+        const cols = Math.ceil(width / hexW) + 2;
+        const rows = Math.ceil(height / vertStep) + 2;
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const offset = (r % 2 === 0) ? 0 : hexW / 2;
+                const x = c * hexW + offset - hexW;
+                const y = r * vertStep - CONFIG.hexSize;
+                const baseAlpha = CONFIG.baseAlphaMin + Math.random() * (CONFIG.baseAlphaMax - CONFIG.baseAlphaMin);
+                hexagons.push({
+                    x, y, baseAlpha,
+                    pulse: 0,
+                    pulseTarget: 0,
+                    pulseSpeed: CONFIG.pulseSpeedMin + Math.random() * (CONFIG.pulseSpeedMax - CONFIG.pulseSpeedMin),
+                });
+            }
+        }
+    }
+
+    function drawHex(x, y, size) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i - Math.PI / 2;
+            const px = x + size * Math.cos(angle);
+            const py = y + size * Math.sin(angle);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+    }
+
+    let frame = 0;
+
+    function animate() {
+        frame++;
+        ctx.clearRect(0, 0, width, height);
+
+        if (frame % CONFIG.pulseTriggerEvery === 0) {
+            const idx = Math.floor(Math.random() * hexagons.length);
+            const h = hexagons[idx];
+            if (h.pulseTarget === 0) {
+                h.pulseTarget = CONFIG.pulseIntensityMin + Math.random() * (CONFIG.pulseIntensityMax - CONFIG.pulseIntensityMin);
+                h.pulse = 0;
+            }
+        }
+
+        if (frame % CONFIG.waveTriggerEvery === 0) {
+            const cx = Math.random() * width;
+            const cy = Math.random() * height;
+            const radius = CONFIG.waveRadiusMin + Math.random() * (CONFIG.waveRadiusMax - CONFIG.waveRadiusMin);
+            hexagons.forEach(h => {
+                const dist = Math.hypot(h.x - cx, h.y - cy);
+                if (dist < radius) {
+                    const delay = dist / radius;
+                    setTimeout(() => {
+                        h.pulseTarget = CONFIG.waveIntensity;
+                        h.pulse = 0;
+                    }, delay * CONFIG.waveDelay);
+                }
+            });
+        }
+
+        for (const h of hexagons) {
+            let mouseInfluence = 0;
+            const distToMouse = Math.hypot(h.x - mouseX, h.y - mouseY);
+
+            if (distToMouse < CONFIG.mouseRadius) {
+                const normalizedDist = 1 - (distToMouse / CONFIG.mouseRadius);
+                mouseInfluence = normalizedDist * CONFIG.mouseStrength;
+                if (normalizedDist > CONFIG.mouseTriggerThreshold && h.pulseTarget < 0.5) {
+                    h.pulseTarget = mouseInfluence;
+                    h.pulse = Math.max(h.pulse, mouseInfluence * 0.5);
+                }
+            }
+
+            if (h.pulseTarget > 0) {
+                h.pulse += h.pulseSpeed;
+                if (h.pulse >= h.pulseTarget) {
+                    h.pulse = h.pulseTarget;
+                    if (mouseInfluence === 0) h.pulseTarget = 0;
+                }
+            } else if (h.pulse > 0) {
+                h.pulse -= h.pulseSpeed * CONFIG.mouseFadeSpeed;
+                if (h.pulse < 0) h.pulse = 0;
+            }
+
+            const intensity = h.baseAlpha + h.pulse * 0.9 + mouseInfluence * 0.5;
+            const activeLevel = Math.max(h.pulse, mouseInfluence);
+
+            if (activeLevel > 0.1) {
+                ctx.shadowBlur = CONFIG.glowBlurMax * activeLevel;
+                ctx.shadowColor = `rgba(${CONFIG.strokeRGB}, ${activeLevel})`;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+
+            ctx.lineWidth = CONFIG.lineWidth;
+            ctx.strokeStyle = `rgba(${CONFIG.strokeRGB}, ${intensity})`;
+            drawHex(h.x, h.y, CONFIG.hexSize * CONFIG.hexScale);
+            ctx.stroke();
+
+            if (activeLevel > 0.3) {
+                ctx.fillStyle = `rgba(${CONFIG.fillRGB}, ${activeLevel * CONFIG.fillOpacity})`;
+                ctx.fill();
+            }
+        }
+
+        ctx.shadowBlur = 0;
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+
+    window.addEventListener('mouseleave', () => {
+        mouseX = -1000;
+        mouseY = -1000;
+    });
+
+    window.addEventListener('resize', resize);
+    resize();
+    animate();
+</script>
+
+</body>
+</html>
