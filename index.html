@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-    <meta property="og:title" content="Protocol_Delete Homepage">
-    <meta property="og:description" content="Here you can know about what projects i have, and how you could comunicate with me">
-    <meta property="og:image" content="">
-    <meta property="og:url" content="https://protocol-delete.online">
-    <meta property="og:type" content="website">
-
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>// Protocol_Delete</title>
@@ -120,7 +113,6 @@
             font-size: 0.9rem;
         }
 
-        /* ===== SOCIAL BUTTONS WITH ICONS ===== */
         .socials {
             display: flex;
             flex-wrap: wrap;
@@ -191,14 +183,16 @@
     <section id="socials">
         <h2>// SOCIALS</h2>
         <div class="socials">
+
             <!-- VRChat -->
             <a href="https://vrchat.com/home/user/usr_bf606d4d-a0fb-4260-8177-9d39a6357552" target="_blank" class="social-btn">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-                    <text x="13" y="12" text-anchor="middle" dominant-baseline="middle" fill="#07070a" font-family="Arial, sans-serif" font-size="8" font-weight="bold" letter-spacing="0.5">VRC</text>
+                    <text x="12" y="13.5" text-anchor="middle" dominant-baseline="middle" fill="#07070a" font-family="Arial, sans-serif" font-size="7.5" font-weight="bold" letter-spacing="0.5">VRC</text>
                 </svg>
                 VRChat
             </a>
+
             <!-- GitHub -->
             <a href="https://github.com/Protocol-Delete" target="_blank" class="social-btn">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -215,7 +209,13 @@
                 Discord
             </a>
 
-            
+            <!-- Email -->
+            <a href="mailto:musy9111@gmail.com" class="social-btn">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                Email
+            </a>
 
         </div>
     </section>
@@ -249,6 +249,17 @@
         fillOpacity: 0.15,
         strokeRGB: '255, 30, 60',
         fillRGB: '255, 30, 60',
+
+        // ===== SECRET HEXAGON (Easter Egg) =====
+        secretEnabled: true,              // Включить секретный hex
+        secretPage: 'blueprinter.html',   // Страница для открытия
+        secretOpenInNewTab: true,         // Открывать в новой вкладке
+        secretClickRadius: 38,            // Радиус зоны клика (пиксели)
+        secretBaseAlphaBoost: 0.2,       // Насколько секретный hex ярче обычных
+        secretPulseChance: 0.015,         // Шанс мерцания за кадр (0-1)
+        secretPulseIntensity: 1.0,        // Сила мерцания
+        secretHintOnHover: true,          // Показывать подсказку при наведении
+        secretEdgeMargin: 100,            // Отступ от краёв экрана
     };
 
     // ============================================
@@ -261,6 +272,9 @@
     let hexagons = [];
     let mouseX = -1000;
     let mouseY = -1000;
+    let secretHex = null;
+    let secretPulse = 0;
+    let isHoveringSecret = false;
 
     function resize() {
         width = window.innerWidth;
@@ -292,6 +306,27 @@
                 });
             }
         }
+
+        // Выбираем секретный hex только из ВИДИМОЙ области с отступом от краёв
+        if (CONFIG.secretEnabled) {
+            const margin = CONFIG.secretEdgeMargin;
+            const visibleHexes = hexagons.filter(h =>
+                h.x >= margin &&
+                h.x <= width - margin &&
+                h.y >= margin &&
+                h.y <= height - margin
+            );
+
+            if (visibleHexes.length > 0) {
+                const idx = Math.floor(Math.random() * visibleHexes.length);
+                secretHex = visibleHexes[idx];
+                secretHex.baseAlpha = Math.min(1, secretHex.baseAlpha + CONFIG.secretBaseAlphaBoost);
+            } else {
+                secretHex = null;
+            }
+        } else {
+            secretHex = null;
+        }
     }
 
     function drawHex(x, y, size) {
@@ -312,6 +347,29 @@
         frame++;
         ctx.clearRect(0, 0, width, height);
 
+        // Обновляем состояние секретного hex
+        isHoveringSecret = false;
+        if (CONFIG.secretEnabled && secretHex) {
+            const dist = Math.hypot(mouseX - secretHex.x, mouseY - secretHex.y);
+            if (dist < CONFIG.hexSize * CONFIG.hexScale) {
+                isHoveringSecret = true;
+            }
+
+            // Случайное мерцание секретного hex
+            if (Math.random() < CONFIG.secretPulseChance) {
+                secretPulse = CONFIG.secretPulseIntensity;
+            }
+            // Затухание мерцания
+            if (secretPulse > 0) {
+                secretPulse -= 0.025;
+                if (secretPulse < 0) secretPulse = 0;
+            }
+        }
+
+        // Меняем курсор при наведении на секретный hex
+        canvas.style.cursor = isHoveringSecret ? 'pointer' : 'default';
+
+        // Random pulses (обычные hex)
         if (frame % CONFIG.pulseTriggerEvery === 0) {
             const idx = Math.floor(Math.random() * hexagons.length);
             const h = hexagons[idx];
@@ -321,6 +379,7 @@
             }
         }
 
+        // Wave propagation
         if (frame % CONFIG.waveTriggerEvery === 0) {
             const cx = Math.random() * width;
             const cy = Math.random() * height;
@@ -337,7 +396,9 @@
             });
         }
 
+        // Draw hexagons
         for (const h of hexagons) {
+            const isSecret = (h === secretHex);
             let mouseInfluence = 0;
             const distToMouse = Math.hypot(h.x - mouseX, h.y - mouseY);
 
@@ -361,17 +422,28 @@
                 if (h.pulse < 0) h.pulse = 0;
             }
 
-            const intensity = h.baseAlpha + h.pulse * 0.9 + mouseInfluence * 0.5;
-            const activeLevel = Math.max(h.pulse, mouseInfluence);
+            // Для секретного hex добавляем мерцание
+            let extraIntensity = 0;
+            if (isSecret) {
+                extraIntensity = secretPulse;
+                // При наведении — чуть ярче (подсказка)
+                if (isHoveringSecret) {
+                    extraIntensity = Math.max(extraIntensity, 0.5);
+                }
+            }
+
+            const intensity = h.baseAlpha + h.pulse * 0.9 + mouseInfluence * 0.5 + extraIntensity;
+            const activeLevel = Math.max(h.pulse, mouseInfluence, extraIntensity);
 
             if (activeLevel > 0.1) {
                 ctx.shadowBlur = CONFIG.glowBlurMax * activeLevel;
-                ctx.shadowColor = `rgba(${CONFIG.strokeRGB}, ${activeLevel})`;
+                const glowAlpha = isSecret ? Math.min(1, activeLevel * 1.3) : activeLevel;
+                ctx.shadowColor = `rgba(${CONFIG.strokeRGB}, ${glowAlpha})`;
             } else {
                 ctx.shadowBlur = 0;
             }
 
-            ctx.lineWidth = CONFIG.lineWidth;
+            ctx.lineWidth = isSecret && isHoveringSecret ? CONFIG.lineWidth + 1 : CONFIG.lineWidth;
             ctx.strokeStyle = `rgba(${CONFIG.strokeRGB}, ${intensity})`;
             drawHex(h.x, h.y, CONFIG.hexSize * CONFIG.hexScale);
             ctx.stroke();
@@ -386,14 +458,71 @@
         requestAnimationFrame(animate);
     }
 
-    window.addEventListener('mousemove', (e) => {
+    // ============================================
+    // MOUSE EVENTS (ГЛОБАЛЬНЫЕ)
+    // ============================================
+    // Отслеживаем мышь по всему документу, а не только на canvas
+    document.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
     });
 
-    window.addEventListener('mouseleave', () => {
+    document.addEventListener('mouseleave', () => {
         mouseX = -1000;
         mouseY = -1000;
+    });
+
+    // ===== КЛИК ПО СЕКРЕТНОМУ HEX (ГЛОБАЛЬНЫЙ) =====
+    // Capture phase (true) — перехватываем клик ДО того, как его получит контент
+    document.addEventListener('click', (e) => {
+        if (!CONFIG.secretEnabled || !secretHex) return;
+
+        const clickX = e.clientX;
+        const clickY = e.clientY;
+        const dist = Math.hypot(clickX - secretHex.x, clickY - secretHex.y);
+
+        if (dist < CONFIG.secretClickRadius) {
+            // Блокируем обычный клик (например, по ссылке под hex)
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Визуальная вспышка
+            secretPulse = 1.5;
+
+            // Открываем страницу
+            setTimeout(() => {
+                if (CONFIG.secretOpenInNewTab) {
+                    window.open(CONFIG.secretPage, '_blank');
+                } else {
+                    window.location.href = CONFIG.secretPage;
+                }
+            }, 200);
+        }
+    }, true); // ← true = capture phase (перехватываем раньше всех)
+
+    // ===== КЛИК ПО СЕКРЕТНОМУ HEX =====
+    canvas.addEventListener('click', (e) => {
+        if (!CONFIG.secretEnabled || !secretHex) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        const dist = Math.hypot(clickX - secretHex.x, clickY - secretHex.y);
+
+        if (dist < CONFIG.secretClickRadius) {
+            // Визуальная вспышка перед переходом
+            secretPulse = 1.5;
+
+            // Небольшая задержка для эффекта
+            setTimeout(() => {
+                if (CONFIG.secretOpenInNewTab) {
+                    window.open(CONFIG.secretPage, '_blank');
+                } else {
+                    window.location.href = CONFIG.secretPage;
+                }
+            }, 200);
+        }
     });
 
     window.addEventListener('resize', resize);

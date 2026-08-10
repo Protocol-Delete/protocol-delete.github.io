@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supernova</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            height: 100vh;
+            color: #ff003c;
+            user-select: none;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: radial-gradient(ellipse at center, #0d0d0d 0%, #000000 100%);
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        #canvas:active {
+            cursor: grabbing;
+        }
+
+        .hud {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        .hud-top-left {
+            top: 30px;
+            left: 30px;
+            line-height: 1.8;
+        }
+
+        .hud-top-left .title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff003c;
+            opacity: 1;
+            text-shadow: 0 0 20px rgba(255, 0, 60, 0.3);
+        }
+
+        .hud-top-right {
+            top: 30px;
+            right: 30px;
+            text-align: right;
+            line-height: 2;
+        }
+
+        .hud-bottom-center {
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 11px;
+            opacity: 0.4;
+            letter-spacing: 3px;
+        }
+
+        .hud-corner {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(255, 0, 60, 0.2);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .hud-corner-tl {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+        .hud-corner-tr {
+            top: 20px;
+            right: 20px;
+            border-left: none;
+            border-bottom: none;
+        }
+        .hud-corner-bl {
+            bottom: 20px;
+            left: 20px;
+            border-right: none;
+            border-top: none;
+        }
+        .hud-corner-br {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .stats {
+            color: #ff003c;
+            font-weight: bold;
+            opacity: 1;
+        }
+
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0a;
+            z-index: 100;
+            transition: opacity 0.8s ease;
+        }
+
+        #loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(255, 0, 60, 0.1);
+            border-top-color: #ff003c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 30px;
+        }
+
+        .loader-text {
+            color: #ff003c;
+            font-size: 14px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .loader-progress {
+            margin-top: 20px;
+            width: 200px;
+            height: 1px;
+            background: rgba(255, 0, 60, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loader-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #ff003c;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.3);
+        }
+
+        .loader-status {
+            margin-top: 15px;
+            font-size: 11px;
+            opacity: 0.5;
+            letter-spacing: 2px;
+            word-break: break-all;
+            max-width: 80%;
+            text-align: center;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.4;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        #errorMsg {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff003c;
+            background: rgba(255, 0, 60, 0.1);
+            border: 1px solid rgba(255, 0, 60, 0.2);
+            padding: 15px 30px;
+            font-size: 13px;
+            letter-spacing: 2px;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border-radius: 4px;
+            max-width: 80%;
+            white-space: pre-wrap;
+        }
+
+        #errorMsg.show {
+            opacity: 1;
+        }
+
+        #errorMsg.error {
+            border-color: #ff003c;
+            background: rgba(255, 0, 60, 0.2);
+        }
+
+        #errorMsg.success {
+            border-color: #00ff88;
+            color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            background: repeating-linear-gradient(0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.03) 2px,
+            rgba(0, 0, 0, 0.03) 4px);
+        }
+
+        #fps {
+            position: fixed;
+            bottom: 80px;
+            right: 30px;
+            font-size: 11px;
+            opacity: 0.3;
+            letter-spacing: 1px;
+            z-index: 10;
+            pointer-events: none;
+            font-family: 'Courier New', monospace;
+            color: #ff003c;
+        }
+    </style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<div id="loader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Loading Model</div>
+    <div class="loader-progress">
+        <div class="loader-progress-bar" id="progressBar"></div>
+    </div>
+    <div class="loader-status" id="loaderStatus">Initializing...</div>
+</div>
+
+<div id="errorMsg"></div>
+
+<div class="hud-corner hud-corner-tl"></div>
+<div class="hud-corner hud-corner-tr"></div>
+<div class="hud-corner hud-corner-bl"></div>
+<div class="hud-corner hud-corner-br"></div>
+
+<div class="hud hud-top-left">
+    <div class="title">⟡ Protocol_Delete</div>
+    <div>Project "Supernova"</div>
+    <div style="opacity:0.4; font-size:10px;">v.0.9.8</div>
+</div>
+
+<div class="hud hud-top-right">
+    <div>VERTICES: <span class="stats" id="vertexCount">0</span></div>
+    <div>EDGES: <span class="stats" id="edgeCount">0</span></div>
+    <div>POLYGONS: <span class="stats" id="polyCount">0</span></div>
+</div>
+
+<div class="hud hud-bottom-center">
+    <span style="opacity:0.3;">MOUSE TO ROTATE · SCROLL TO ZOOM</span>
+</div>
+
+<div id="container">
+    <canvas id="canvas"></canvas>
+</div>
+
+<div id="fps">FPS: --</div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ============================================================
+    //  1. CONFIGURATION
+    // ============================================================
+    const CONFIG = {
+        // Visual settings
+        lineColor: '#ff003c',
+        lineGlow: 'rgba(255, 0, 60, 0.06)',
+
+        // Dual layer offset
+        layerOffset: 0.003,
+
+        // Depth shading
+        depthShading: true,
+        depthIntensity: 0.6,
+
+        // Pivot position (fixed)
+        pivotPosition: {
+            x: 0,
+            y: -0.5,
+            z: 0.88
+        },
+
+        // Model rotation (Euler angles in radians)
+        initialRotation: {
+            x: -1.5,
+            y: 0,
+            z: 0
+        },
+
+        // Auto-rotation
+        autoRotate: true,
+        autoRotateSpeed: 1.0,
+
+        // Camera
+        cameraDistance: 3,
+        cameraHeight: -0.5,
+
+        // Performance
+        maxPolys: 50000,
+        pixelRatio: 2,
+
+        // File
+        modelPath: 'model.fbx'
+    };
+
+    // ============================================================
+    //  2. THREE.JS INITIALIZATION
+    // ============================================================
+    const container = document.getElementById('container');
+    const canvas = document.getElementById('canvas');
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0a);
+
+    const camera = new THREE.PerspectiveCamera(
+        45,
+        container.clientWidth / container.clientHeight,
+        0.1,
+        100
+    );
+    camera.position.set(
+        CONFIG.cameraDistance,
+        CONFIG.cameraHeight,
+        CONFIG.cameraDistance
+    );
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: false
+    });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, CONFIG.pixelRatio));
+
+    // ============================================================
+    //  3. ORBIT CONTROLS WITH FIXED PIVOT
+    // ============================================================
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
+    controls.autoRotate = CONFIG.autoRotate;
+    controls.autoRotateSpeed = CONFIG.autoRotateSpeed;
+    controls.rotateSpeed = 0.8;
+    controls.zoomSpeed = 1.2;
+    controls.enablePan = false;
+
+    // Fixed pivot position from config
+    const pivotPosition = new THREE.Vector3(
+        CONFIG.pivotPosition.x || 0,
+        CONFIG.pivotPosition.y || 0,
+        CONFIG.pivotPosition.z || 0
+    );
+    controls.target.copy(pivotPosition);
+    controls.update();
+
+    // ============================================================
+    //  4. DUAL LAYER MODEL
+    // ============================================================
+    let vectorGroup = new THREE.Group();
+    scene.add(vectorGroup);
+
+    class DepthShadingMaterial extends THREE.ShaderMaterial {
+        constructor(color, intensity = 0.6) {
+            super({
+                uniforms: {
+                    uColor: { value: new THREE.Color(color) },
+                    uIntensity: { value: intensity }
+                },
+                vertexShader: `
+                        varying float vDepth;
+                        void main() {
+                            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                            vDepth = -mvPosition.z;
+                            gl_Position = projectionMatrix * mvPosition;
+                        }
+                    `,
+                fragmentShader: `
+                        uniform vec3 uColor;
+                        uniform float uIntensity;
+                        varying float vDepth;
+
+                        void main() {
+                            float depth = smoothstep(0.0, 8.0, vDepth);
+                            float brightness = 1.0 - depth * uIntensity;
+                            brightness = max(0.3, brightness);
+                            vec3 color = uColor * brightness;
+                            gl_FragColor = vec4(color, 0.85);
+                        }
+                    `,
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+        }
+    }
+
+    function createVectorModel(data) {
+        // Clean up old model
+        while (vectorGroup.children.length > 0) {
+            const child = vectorGroup.children[0];
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) child.material.dispose();
+            vectorGroup.remove(child);
+        }
+
+        const { vertices, edges } = data;
+
+        // Build line geometry
+        const positions = [];
+        edges.forEach(edge => {
+            const v1 = vertices[edge[0]];
+            const v2 = vertices[edge[1]];
+            if (v1 && v2) {
+                positions.push(v1[0], v1[1], v1[2]);
+                positions.push(v2[0], v2[1], v2[2]);
+            }
+        });
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+        // Layer 1: Main lines with depth shading
+        let mainMaterial;
+        if (CONFIG.depthShading) {
+            mainMaterial = new DepthShadingMaterial(
+                CONFIG.lineColor,
+                CONFIG.depthIntensity
+            );
+        } else {
+            mainMaterial = new THREE.LineBasicMaterial({
+                color: CONFIG.lineColor,
+                transparent: true,
+                opacity: 0.85
+            });
+        }
+
+        const mainLines = new THREE.LineSegments(geometry, mainMaterial);
+        vectorGroup.add(mainLines);
+
+        // Layer 2: Glow layer with minimal offset
+        const glowMaterial = new THREE.LineBasicMaterial({
+            color: CONFIG.lineColor,
+            transparent: true,
+            opacity: 0.15
+        });
+
+        const glowGeometry = geometry.clone();
+        const glowLines = new THREE.LineSegments(glowGeometry, glowMaterial);
+
+        const offset = CONFIG.layerOffset || 0.001;
+        glowLines.position.set(offset, offset, offset);
+
+        vectorGroup.add(glowLines);
+
+        // Apply initial rotation
+        vectorGroup.rotation.x = CONFIG.initialRotation.x || 0;
+        vectorGroup.rotation.y = CONFIG.initialRotation.y || 0;
+        vectorGroup.rotation.z = CONFIG.initialRotation.z || 0;
+
+        // Scale and center
+        const box = new THREE.Box3().setFromObject(vectorGroup);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (maxDim > 0) {
+            const scale = 2.0 / maxDim;
+            vectorGroup.scale.set(scale, scale, scale);
+        }
+
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        vectorGroup.position.copy(center.clone().multiplyScalar(-1));
+    }
+
+    // ============================================================
+    //  5. FBX PARSING
+    // ============================================================
+    function loadFBXFromURL(url) {
+        showLoader();
+        document.getElementById('loaderStatus').textContent = 'Loading: ' + url;
+
+        const loader = new FBXLoader();
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                }
+                const contentLength = response.headers.get('content-length');
+                if (contentLength) {
+                    const total = parseInt(contentLength, 10);
+                    let loaded = 0;
+                    const reader = response.body.getReader();
+                    return new ReadableStream({
+                        start(controller) {
+                            function push() {
+                                reader.read().then(({ done, value }) => {
+                                    if (done) {
+                                        controller.close();
+                                        return;
+                                    }
+                                    loaded += value.length;
+                                    const progress = (loaded / total) * 100;
+                                    document.getElementById('progressBar').style.width = Math.min(progress, 100) + '%';
+                                    document.getElementById('loaderStatus').textContent = 'Loading: ' + Math.round(progress) + '%';
+                                    controller.enqueue(value);
+                                    push();
+                                });
+                            }
+                            push();
+                        }
+                    });
+                }
+                return response.body;
+            })
+            .then(body => new Response(body).arrayBuffer())
+            .then(arrayBuffer => {
+                document.getElementById('loaderStatus').textContent = 'Parsing FBX...';
+
+                return new Promise((resolve, reject) => {
+                    try {
+                        const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+                        const blobUrl = URL.createObjectURL(blob);
+
+                        loader.load(blobUrl,
+                            (scene) => {
+                                URL.revokeObjectURL(blobUrl);
+                                resolve(scene);
+                            },
+                            (progress) => {
+                                const pct = Math.round((progress.loaded / progress.total) * 100);
+                                document.getElementById('loaderStatus').textContent = 'Parsing: ' + pct + '%';
+                            },
+                            (error) => {
+                                URL.revokeObjectURL(blobUrl);
+                                reject(error);
+                            }
+                        );
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+            })
+            .then(scene => {
+                document.getElementById('loaderStatus').textContent = 'Extracting geometry...';
+                return extractGeometry(scene);
+            })
+            .then(data => {
+                createVectorModel(data);
+                updateHUD(data);
+                hideLoader();
+                showSuccess('✅ Model loaded: ' + data.vertexCount + ' vertices, ' + data.edgeCount + ' edges');
+
+                // Keep pivot at fixed position
+                controls.target.copy(pivotPosition);
+                camera.position.set(
+                    CONFIG.cameraDistance,
+                    CONFIG.cameraHeight,
+                    CONFIG.cameraDistance
+                );
+                controls.update();
+            })
+            .catch(err => {
+                console.error('Load error:', err);
+                hideLoader();
+                showError('❌ Error: ' + err.message);
+                setTimeout(() => {
+                    if (vectorGroup.children.length === 0) {
+                        createDemoModel();
+                    }
+                }, 1500);
+            });
+    }
+
+    function extractGeometry(scene) {
+        const meshes = [];
+        scene.traverse((child) => {
+            if (child.isMesh) {
+                meshes.push(child);
+            }
+        });
+
+        if (meshes.length === 0) {
+            throw new Error('No meshes found in model');
+        }
+
+        let totalVerts = 0;
+        let totalPolys = 0;
+        const allPositions = [];
+        const allTriIndices = [];
+
+        meshes.forEach((mesh) => {
+            const geo = mesh.geometry;
+            if (!geo.attributes.position) return;
+
+            const pos = geo.attributes.position.array;
+            const index = geo.index;
+            const vertCount = pos.length / 3;
+
+            let triangles = [];
+            if (index) {
+                for (let i = 0; i < index.count; i += 3) {
+                    triangles.push([
+                        index.array[i],
+                        index.array[i + 1],
+                        index.array[i + 2]
+                    ]);
+                }
+            } else {
+                for (let j = 0; j < vertCount; j += 3) {
+                    triangles.push([j, j + 1, j + 2]);
+                }
+            }
+
+            if (totalPolys + triangles.length > CONFIG.maxPolys) {
+                console.warn('Polygon limit exceeded, truncating');
+                triangles = triangles.slice(0, CONFIG.maxPolys - totalPolys);
+            }
+
+            totalPolys += triangles.length;
+            const offset = totalVerts;
+
+            for (let k = 0; k < pos.length; k++) {
+                allPositions.push(pos[k]);
+            }
+
+            triangles.forEach((tri) => {
+                allTriIndices.push([tri[0] + offset, tri[1] + offset, tri[2] + offset]);
+            });
+
+            totalVerts += vertCount;
+        });
+
+        const vertices = [];
+        for (let m = 0; m < allPositions.length; m += 3) {
+            vertices.push([
+                allPositions[m],
+                allPositions[m + 1],
+                allPositions[m + 2]
+            ]);
+        }
+
+        const edgeMap = new Map();
+        allTriIndices.forEach((tri) => {
+            const edges = [
+                [tri[0], tri[1]],
+                [tri[1], tri[2]],
+                [tri[2], tri[0]]
+            ];
+            edges.forEach((edge) => {
+                const a = edge[0];
+                const b = edge[1];
+                const key = Math.min(a, b) + '_' + Math.max(a, b);
+                if (!edgeMap.has(key)) {
+                    edgeMap.set(key, [a, b]);
+                }
+            });
+        });
+
+        const edges = Array.from(edgeMap.values());
+
+        return {
+            vertices: vertices,
+            edges: edges,
+            vertexCount: vertices.length,
+            edgeCount: edges.length,
+            polyCount: allTriIndices.length
+        };
+    }
+
+    // ============================================================
+    //  6. DEMO MODEL (Icosahedron)
+    // ============================================================
+    function createDemoModel() {
+        const phi = (1 + Math.sqrt(5)) / 2;
+        const verts = [
+            [-1, phi, 0], [1, phi, 0], [-1, -phi, 0], [1, -phi, 0],
+            [0, -1, phi], [0, 1, phi], [0, -1, -phi], [0, 1, -phi],
+            [phi, 0, -1], [phi, 0, 1], [-phi, 0, -1], [-phi, 0, 1]
+        ];
+
+        const edges = [
+            [0, 1], [0, 5], [0, 7], [0, 10], [0, 11],
+            [1, 5], [1, 7], [1, 8], [1, 9],
+            [2, 3], [2, 4], [2, 6], [2, 10], [2, 11],
+            [3, 4], [3, 6], [3, 8], [3, 9],
+            [4, 5], [4, 9], [4, 11],
+            [5, 9], [5, 11],
+            [6, 7], [6, 8], [6, 10],
+            [7, 8], [7, 10],
+            [8, 9],
+            [10, 11]
+        ];
+
+        const data = {
+            vertices: verts,
+            edges: edges,
+            vertexCount: verts.length,
+            edgeCount: edges.length,
+            polyCount: 20
+        };
+
+        createVectorModel(data);
+        updateHUD(data);
+        hideLoader();
+        showError('ℹ️ Demo Icosahedron\nmodel.fbx not found or corrupted');
+    }
+
+    // ============================================================
+    //  7. UI HELPERS
+    // ============================================================
+    function showLoader() {
+        document.getElementById('loader').classList.remove('hidden');
+        document.getElementById('progressBar').style.width = '0%';
+    }
+
+    function hideLoader() {
+        document.getElementById('loader').classList.add('hidden');
+    }
+
+    function updateHUD(data) {
+        if (!data) return;
+        document.getElementById('vertexCount').textContent = data.vertexCount.toLocaleString();
+        document.getElementById('edgeCount').textContent = data.edgeCount.toLocaleString();
+        document.getElementById('polyCount').textContent = data.polyCount.toLocaleString();
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.className = 'show error';
+        clearTimeout(el._timeout);
+        el._timeout = setTimeout(() => {
+            el.classList.remove('show');
+        }, 8000);
+    }
+
+    function showSuccess(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.className = 'show success';
+        clearTimeout(el._timeout);
+        el._timeout = setTimeout(() => {
+            el.classList.remove('show');
+        }, 4000);
+    }
+
+    // ============================================================
+    //  8. FPS COUNTER
+    // ============================================================
+    let frameCount = 0;
+    let lastFpsUpdate = performance.now();
+
+    function updateFPS() {
+        frameCount++;
+        const now = performance.now();
+        if (now - lastFpsUpdate >= 1000) {
+            document.getElementById('fps').textContent = 'FPS: ' + frameCount;
+            frameCount = 0;
+            lastFpsUpdate = now;
+        }
+    }
+
+    // ============================================================
+    //  9. RESIZE
+    // ============================================================
+    function resize() {
+        const rect = container.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+    }
+
+    window.addEventListener('resize', resize);
+
+    // ============================================================
+    //  10. ANIMATION
+    // ============================================================
+    function animate() {
+        controls.update();
+        renderer.render(scene, camera);
+        updateFPS();
+        requestAnimationFrame(animate);
+    }
+
+    // ============================================================
+    //  11. STARTUP
+    // ============================================================
+    resize();
+    showLoader();
+    document.getElementById('loaderStatus').textContent = 'Searching: ' + CONFIG.modelPath;
+
+    console.log('⟡ FBX Vector Renderer v3.4 (Fixed Pivot)');
+    console.log('⟡ Pivot position: (0, 0, 0.88)');
+    console.log('⟡ Looking for: ' + CONFIG.modelPath);
+
+    setTimeout(() => {
+        loadFBXFromURL(CONFIG.modelPath);
+    }, 500);
+
+    animate();
+
+</script>
+
+</body>
+</html>
